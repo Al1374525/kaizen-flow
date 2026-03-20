@@ -1,0 +1,56 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
+    
+    // Path mapping for monorepo
+    "baseUrl": ".",
+    "paths": {
+      "@kaizen/shared": ["./packages/shared/src"],
+      "@kaizen/shared/*": ["./packages/shared/src/*"],
+      "@kaizen/api": ["./packages/api/src"],
+      "@kaizen/api/*": ["./packages/api/src/*"],
+      "@kaizen/db": ["./packages/db/src"],
+      "@kaizen/db/*": ["./packages/db/src/*"]
+    }
+  },
+  "include": [],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".expo"
+  ],
+  "references": [
+    {
+      "path": "./packages/shared"
+    },
+    {
+      "path": "./packages/api"
+    },
+    {
+      "path": "./packages/db"
+    },
+    {
+      "path": "./apps/mobile"
+    }
+  ]
+}
