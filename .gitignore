@@ -95,7 +95,6 @@ GoogleService-Info.plist
 .parcel-cache/
 
 # Package manager
-package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
