@@ -18,16 +18,16 @@ export class AppError extends Error implements ApiError {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = true;
-    
+
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
 export function errorHandler(
   error: ApiError | ZodError,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void {
   let statusCode = 500;
   let message = 'Internal server error';
@@ -51,8 +51,7 @@ export function errorHandler(
   else if (error.message?.includes('duplicate key')) {
     statusCode = 409;
     message = 'Resource already exists';
-  }
-  else if (error.message?.includes('foreign key')) {
+  } else if (error.message?.includes('foreign key')) {
     statusCode = 400;
     message = 'Invalid reference';
   }
@@ -63,8 +62,8 @@ export function errorHandler(
       message: error.message,
       stack: error.stack,
       statusCode,
-      url: req.url,
-      method: req.method,
+      url: _req.url,
+      method: _req.method,
     });
   }
 

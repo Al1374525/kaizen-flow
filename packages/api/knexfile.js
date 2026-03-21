@@ -2,16 +2,12 @@
  * Knex configuration for database migrations
  */
 
-import type { Knex } from 'knex';
-import dotenv from 'dotenv';
+require('dotenv').config();
 
-dotenv.config();
-
-const config: { [key: string]: Knex.Config } = {
+const config = {
   development: {
     client: 'pg',
-    connection:
-      process.env.DATABASE_URL || 'postgresql://localhost:5432/kaizen_flow',
+    connection: process.env.DATABASE_URL || 'postgresql://postgres:testpass@localhost:5432/kaizen_flow_test',
     migrations: {
       directory: './src/migrations',
       extension: 'ts',
@@ -24,9 +20,7 @@ const config: { [key: string]: Knex.Config } = {
 
   test: {
     client: 'pg',
-    connection:
-      process.env.TEST_DATABASE_URL ||
-      'postgresql://localhost:5432/kaizen_flow_test',
+    connection: process.env.TEST_DATABASE_URL || 'postgresql://postgres:testpass@localhost:5432/kaizen_flow_test',
     migrations: {
       directory: './src/migrations',
       extension: 'ts',
@@ -55,4 +49,4 @@ const config: { [key: string]: Knex.Config } = {
   },
 };
 
-export default config;
+module.exports = config;

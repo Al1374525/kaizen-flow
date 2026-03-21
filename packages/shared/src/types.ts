@@ -33,22 +33,18 @@ export interface Task {
   completedAt?: Date;
 }
 
-export type TaskCategory = 
-  | 'personal-development' 
-  | 'health-wellness' 
-  | 'career-growth' 
-  | 'life-admin' 
-  | 'creative' 
-  | 'social' 
+export type TaskCategory =
+  | 'personal-development'
+  | 'health-wellness'
+  | 'career-growth'
+  | 'life-admin'
+  | 'creative'
+  | 'social'
   | 'other';
 
 export type EmotionalDifficulty = 1 | 2 | 3 | 4 | 5;
 
-export type TaskStatus = 
-  | 'active' 
-  | 'completed' 
-  | 'paused' 
-  | 'cancelled';
+export type TaskStatus = 'active' | 'completed' | 'paused' | 'cancelled';
 
 export interface TaskAction {
   id: string;
@@ -63,20 +59,20 @@ export interface TaskAction {
   createdAt: Date;
 }
 
-export type ActionType = 
-  | 'start'        // Started working on task
-  | 'progress'     // Made progress 
-  | 'complete'     // Completed task
+export type ActionType =
+  | 'start' // Started working on task
+  | 'progress' // Made progress
+  | 'complete' // Completed task
   | 'micro_commit' // Started micro-commitment
-  | 'pause'        // Paused work
-  | 'resume';      // Resumed after pause
+  | 'pause' // Paused work
+  | 'resume'; // Resumed after pause
 
 export interface UserXP {
   id: string;
   userId: string;
   totalXP: number;
-  couragePoints: number;    // XP from starting avoided tasks
-  phoenixPoints: number;    // XP from returning after absence
+  couragePoints: number; // XP from starting avoided tasks
+  phoenixPoints: number; // XP from returning after absence
   currentLevel: number;
   updatedAt: Date;
 }
@@ -93,12 +89,12 @@ export interface XPTransaction {
   createdAt: Date;
 }
 
-export type XPType = 
-  | 'courage'      // Starting avoided tasks
-  | 'consistency'  // Regular engagement
-  | 'phoenix'      // Returning after absence
-  | 'bonus'        // Achievement unlocks
-  | 'completion';  // Task completion
+export type XPType =
+  | 'courage' // Starting avoided tasks
+  | 'consistency' // Regular engagement
+  | 'phoenix' // Returning after absence
+  | 'bonus' // Achievement unlocks
+  | 'completion'; // Task completion
 
 export interface Achievement {
   id: string;
@@ -111,10 +107,10 @@ export interface Achievement {
   createdAt: Date;
 }
 
-export type AchievementCategory = 
+export type AchievementCategory =
   | 'first-steps'
   | 'courage'
-  | 'consistency' 
+  | 'consistency'
   | 'recovery'
   | 'milestones'
   | 'special';

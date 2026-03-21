@@ -11,7 +11,7 @@ router.get('/', async (req: Request, res: Response) => {
   try {
     // Test database connection
     await getDb().raw('SELECT 1');
-    
+
     res.json({
       success: true,
       message: 'Kaizen Flow API is healthy',

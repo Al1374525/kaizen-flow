@@ -9,7 +9,7 @@ let db: Knex;
 
 export function initializeDatabase(): Promise<void> {
   const env = getEnv();
-  
+
   const config: Knex.Config = {
     client: 'pg',
     connection: env.DATABASE_URL,
@@ -28,7 +28,7 @@ export function initializeDatabase(): Promise<void> {
   };
 
   db = knex(config);
-  
+
   // Test connection
   return db.raw('SELECT 1+1 AS result').then(() => {
     console.log('✅ Database connection test successful');
@@ -37,10 +37,12 @@ export function initializeDatabase(): Promise<void> {
 
 export function getDb(): Knex {
   if (!db) {
-    throw new Error('Database not initialized. Call initializeDatabase() first.');
+    throw new Error(
+      'Database not initialized. Call initializeDatabase() first.'
+    );
   }
   return db;
 }
 
-// Export for migrations/seeds
-export default db;
+// Export for migrations/seeds - only export after initialization
+export default {} as Knex;
