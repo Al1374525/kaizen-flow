@@ -20,6 +20,7 @@
     "postinstall": "husky install"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "concurrently": "^8.2.2",
@@ -62,5 +63,10 @@
     "gamification",
     "micro-commitments",
     "portfolio-project"
-  ]
+  ],
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "jsonwebtoken": "^9.0.3",
+    "zod": "^4.3.6"
+  }
 }
