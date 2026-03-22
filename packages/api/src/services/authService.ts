@@ -30,11 +30,17 @@ export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, salt);
 }
 
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+export async function verifyPassword(
+  password: string,
+  hash: string
+): Promise<boolean> {
   return bcrypt.compare(password, hash);
 }
 
-export function generateTokens(payload: JWTPayload): { accessToken: string; refreshToken: string } {
+export function generateTokens(payload: JWTPayload): {
+  accessToken: string;
+  refreshToken: string;
+} {
   const env = getEnv();
   const accessToken = jwt.sign(payload, env.JWT_SECRET, {
     expiresIn: '7d',
@@ -92,7 +98,10 @@ export async function registerUser(
   };
 }
 
-export async function loginUser(email: string, password: string): Promise<AuthResult> {
+export async function loginUser(
+  email: string,
+  password: string
+): Promise<AuthResult> {
   const db = getDb();
 
   const user = await db('users').where({ email }).first();
@@ -108,7 +117,9 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
   const payload: JWTPayload = { userId: user.id, email: user.email };
   const tokens = generateTokens(payload);
 
-  await db('users').where({ id: user.id }).update({ last_active_at: new Date() });
+  await db('users')
+    .where({ id: user.id })
+    .update({ last_active_at: new Date() });
 
   return {
     user: {
@@ -122,7 +133,9 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
   };
 }
 
-export function refreshAccessToken(refreshToken: string): { accessToken: string } {
+export function refreshAccessToken(refreshToken: string): {
+  accessToken: string;
+} {
   const payload = verifyToken(refreshToken);
   const env = getEnv();
 
