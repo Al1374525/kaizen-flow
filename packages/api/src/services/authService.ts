@@ -25,17 +25,11 @@ export interface AuthResult {
   refreshToken: string;
 }
 
-/**
- * Hash a password using bcrypt
- */
 export async function hashPassword(password: string): Promise<string> {
   const salt = await bcrypt.genSalt(12);
   return bcrypt.hash(password, salt);
 }
 
-/**
- * Verify a password against a hash
- */
 export async function verifyPassword(
   password: string,
   hash: string
@@ -43,9 +37,6 @@ export async function verifyPassword(
   return bcrypt.compare(password, hash);
 }
 
-/**
- * Generate JWT tokens (access + refresh)
- */
 export function generateTokens(payload: JWTPayload): {
   accessToken: string;
   refreshToken: string;
@@ -60,9 +51,6 @@ export function generateTokens(payload: JWTPayload): {
   return { accessToken, refreshToken };
 }
 
-/**
- * Verify a JWT token
- */
 export function verifyToken(token: string): JWTPayload {
   const env = getEnv();
   try {
@@ -72,9 +60,6 @@ export function verifyToken(token: string): JWTPayload {
   }
 }
 
-/**
- * Register a new user
- */
 export async function registerUser(
   email: string,
   password: string,
@@ -82,16 +67,13 @@ export async function registerUser(
 ): Promise<AuthResult> {
   const db = getDb();
 
-  // Check if user already exists
   const existingUser = await db('users').where({ email }).first();
   if (existingUser) {
     throw new AppError('User with this email already exists', 409);
   }
 
-  // Hash the password
   const passwordHash = await hashPassword(password);
 
-  // Create the user
   const [user] = await db('users')
     .insert({
       email,
@@ -101,7 +83,6 @@ export async function registerUser(
     })
     .returning(['id', 'email', 'first_name', 'timezone']);
 
-  // Generate tokens
   const payload: JWTPayload = { userId: user.id, email: user.email };
   const tokens = generateTokens(payload);
 
@@ -117,32 +98,25 @@ export async function registerUser(
   };
 }
 
-/**
- * Login an existing user
- */
 export async function loginUser(
   email: string,
   password: string
 ): Promise<AuthResult> {
   const db = getDb();
 
-  // Find the user
   const user = await db('users').where({ email }).first();
   if (!user) {
     throw new AppError('Invalid email or password', 401);
   }
 
-  // Verify the password
   const isValidPassword = await verifyPassword(password, user.password_hash);
   if (!isValidPassword) {
     throw new AppError('Invalid email or password', 401);
   }
 
-  // Generate tokens
   const payload: JWTPayload = { userId: user.id, email: user.email };
   const tokens = generateTokens(payload);
 
-  // Update last active timestamp
   await db('users')
     .where({ id: user.id })
     .update({ last_active_at: new Date() });
@@ -159,9 +133,6 @@ export async function loginUser(
   };
 }
 
-/**
- * Refresh access token using refresh token
- */
 export function refreshAccessToken(refreshToken: string): {
   accessToken: string;
 } {
@@ -177,9 +148,6 @@ export function refreshAccessToken(refreshToken: string): {
   return { accessToken };
 }
 
-/**
- * Get user by ID
- */
 export async function getUserById(userId: string) {
   const db = getDb();
   const user = await db('users').where({ id: userId }).first();
