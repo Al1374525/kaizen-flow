@@ -8,7 +8,7 @@ jobs:
   lint-and-test:
     name: Lint & Test
     runs-on: ubuntu-latest
-
+    
     services:
       postgres:
         image: postgres:15
@@ -46,3 +46,9 @@ jobs:
         run: npm ci
       - name: Build mobile app
         run: npm run build --workspace=apps/mobile || true
+    
+
+
+
+
+        
