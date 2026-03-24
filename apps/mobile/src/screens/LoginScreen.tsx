@@ -41,7 +41,9 @@ export default function LoginScreen({ navigation }: any) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {}
+  );
 
   // Validate inputs
   const validateInputs = (): boolean => {
@@ -113,7 +115,7 @@ export default function LoginScreen({ navigation }: any) {
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps='handled'
       >
         {/* Logo/Title */}
         <View style={styles.header}>
@@ -131,18 +133,20 @@ export default function LoginScreen({ navigation }: any) {
             <TextInput
               style={[styles.input, errors.email && styles.inputError]}
               value={email}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 setEmail(text);
                 if (errors.email) setErrors({ ...errors, email: undefined });
               }}
-              placeholder="email@example.com"
-              placeholderTextColor="#B8A089"
-              keyboardType="email-address"
-              autoCapitalize="none"
+              placeholder='email@example.com'
+              placeholderTextColor='#B8A089'
+              keyboardType='email-address'
+              autoCapitalize='none'
               autoCorrect={false}
               editable={!isLoading}
             />
-            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+            {errors.email && (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            )}
           </View>
 
           {/* Password Input */}
@@ -150,14 +154,19 @@ export default function LoginScreen({ navigation }: any) {
             <Text style={styles.label}>Password</Text>
             <View style={styles.passwordContainer}>
               <TextInput
-                style={[styles.input, styles.passwordInput, errors.password && styles.inputError]}
+                style={[
+                  styles.input,
+                  styles.passwordInput,
+                  errors.password && styles.inputError,
+                ]}
                 value={password}
-                onChangeText={(text) => {
+                onChangeText={text => {
                   setPassword(text);
-                  if (errors.password) setErrors({ ...errors, password: undefined });
+                  if (errors.password)
+                    setErrors({ ...errors, password: undefined });
                 }}
-                placeholder="Enter your password"
-                placeholderTextColor="#B8A089"
+                placeholder='Enter your password'
+                placeholderTextColor='#B8A089'
                 secureTextEntry={!showPassword}
                 editable={!isLoading}
               />
@@ -171,7 +180,9 @@ export default function LoginScreen({ navigation }: any) {
                 </Text>
               </TouchableOpacity>
             </View>
-            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+            {errors.password && (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            )}
           </View>
 
           {/* Forgot Password Link */}
@@ -186,7 +197,7 @@ export default function LoginScreen({ navigation }: any) {
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color='#FFFFFF' />
             ) : (
               <Text style={styles.buttonText}>Sign In</Text>
             )}
@@ -210,7 +221,9 @@ export default function LoginScreen({ navigation }: any) {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Small steps lead to{'\n'}big changes 🌟</Text>
+          <Text style={styles.footerText}>
+            Small steps lead to{'\n'}big changes 🌟
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -13,7 +13,7 @@ export default function HomeScreen({ navigation }: any) {
     await SecureStore.deleteItemAsync('accessToken');
     await SecureStore.deleteItemAsync('refreshToken');
     await SecureStore.deleteItemAsync('user');
-    
+
     // Navigate back to login
     navigation.replace('Login');
   };
@@ -22,7 +22,7 @@ export default function HomeScreen({ navigation }: any) {
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to Kaizen Flow! 🎉</Text>
       <Text style={styles.subtitle}>You're now logged in!</Text>
-      
+
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Sign Out</Text>
       </TouchableOpacity>
