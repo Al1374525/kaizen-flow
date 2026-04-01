@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#3D2914',
     lineHeight: 36,
     maxWidth: 280,
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   },
   focusTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#3D2914',
     lineHeight: 30,
     marginBottom: 14,
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   progressHeader: {
     flexDirection: 'row',
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   },
   progressPercentage: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#3D2914',
   },
   progressTrack: {
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   },
   tasksHeading: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#3D2914',
     marginBottom: 14,
   },
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   taskCategoryText: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   taskDifficulty: {
     fontSize: 13,
