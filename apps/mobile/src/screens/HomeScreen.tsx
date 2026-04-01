@@ -99,8 +99,12 @@ export default function HomeScreen() {
         >
           <View style={styles.header}>
             <View>
-              <Text style={styles.greeting}>Good morning, {user.firstName}! 👋</Text>
-              <Text style={styles.subGreeting}>Let&apos;s make today count.</Text>
+              <Text style={styles.greeting}>
+                Good morning, {user.firstName}! 👋
+              </Text>
+              <Text style={styles.subGreeting}>
+                Let&apos;s make today count.
+              </Text>
             </View>
             <TouchableOpacity
               activeOpacity={0.8}
@@ -125,7 +129,9 @@ export default function HomeScreen() {
                   { backgroundColor: categoryColors[focusTask.category] },
                 ]}
               >
-                <Text style={styles.categoryChipText}>📁 {focusTask.category}</Text>
+                <Text style={styles.categoryChipText}>
+                  📁 {focusTask.category}
+                </Text>
               </View>
             </View>
 
@@ -141,7 +147,9 @@ export default function HomeScreen() {
           <View style={styles.card}>
             <View style={styles.progressHeader}>
               <Text style={styles.sectionLabel}>Your Progress</Text>
-              <Text style={styles.progressPercentage}>{progressPercentage}%</Text>
+              <Text style={styles.progressPercentage}>
+                {progressPercentage}%
+              </Text>
             </View>
 
             <View style={styles.progressTrack}>
@@ -159,7 +167,9 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.tasksSection}>
-            <Text style={styles.tasksHeading}>Today's Tasks ({mockTasks.length})</Text>
+            <Text style={styles.tasksHeading}>
+              Today's Tasks ({mockTasks.length})
+            </Text>
 
             {mockTasks.map(task => (
               <View key={task.id} style={styles.taskCard}>
@@ -180,9 +190,13 @@ export default function HomeScreen() {
                           { backgroundColor: categoryColors[task.category] },
                         ]}
                       >
-                        <Text style={styles.taskCategoryText}>{task.category}</Text>
+                        <Text style={styles.taskCategoryText}>
+                          {task.category}
+                        </Text>
                       </View>
-                      <Text style={styles.taskDifficulty}>💪 {task.difficulty}/5</Text>
+                      <Text style={styles.taskDifficulty}>
+                        💪 {task.difficulty}/5
+                      </Text>
                     </View>
                   </View>
                 </View>
