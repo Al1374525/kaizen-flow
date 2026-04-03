@@ -86,8 +86,7 @@ export default function HomeScreen() {
   };
 
   const handleCreateTask = () => {
-    void navigation;
-    // Placeholder for create-task flow once the route is wired up
+    navigation.navigate('CreateTask');
   };
 
   return (
