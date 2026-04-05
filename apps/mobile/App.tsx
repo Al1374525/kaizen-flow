@@ -5,12 +5,14 @@ import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import CreateTaskScreen from './src/screens/CreateTaskScreen';
+import TaskDetailScreen from './src/screens/TaskDetailScreen';
 
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
   CreateTask: { parentTaskId?: string } | undefined;
+  TaskDetail: { taskId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -32,6 +34,7 @@ export default function App() {
           component={CreateTaskScreen}
           options={{ presentation: 'modal' }}
         />
+        <Stack.Screen name='TaskDetail' component={TaskDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
