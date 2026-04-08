@@ -60,7 +60,16 @@ const DIFFICULTY_LABELS: Record<number, string> = {
 };
 
 // Mock task data - in real app, fetch from API
-const mockTask: { id: string; title: string; description: string; status: TaskStatus; difficulty: number; category: TaskCategory; createdAt: string; completedAt: string | null; } = {
+const mockTask: {
+  id: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  difficulty: number;
+  category: TaskCategory;
+  createdAt: string;
+  completedAt: string | null;
+} = {
   id: '1',
   title: 'Review security logs',
   description:
@@ -74,7 +83,7 @@ const mockTask: { id: string; title: string; description: string; status: TaskSt
 
 export default function TaskDetailScreen() {
   const navigation = useNavigation<any>();
-  const route = useRoute<RouteProp<RootStackParamList, 'TaskDetail'>>();
+  void useRoute<RouteProp<RootStackParamList, 'TaskDetail'>>();
 
   const [task, setTask] = useState(mockTask);
   const [isLoading, setIsLoading] = useState(false);
