@@ -39,7 +39,7 @@ const mockAchievements = [
 ];
 
 export default function ProgressScreen() {
-  const navigation = useNavigation<any>();
+  void useNavigation<any>();
 
   const progressPercentage = Math.round(
     (mockUser.currentXP / mockUser.xpToNextLevel) * 100
