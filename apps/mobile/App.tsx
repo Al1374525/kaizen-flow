@@ -6,6 +6,7 @@ import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import CreateTaskScreen from './src/screens/CreateTaskScreen';
 import TaskDetailScreen from './src/screens/TaskDetailScreen';
+import ProgressScreen from './src/screens/ProgressScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -13,6 +14,7 @@ export type RootStackParamList = {
   Home: undefined;
   CreateTask: { parentTaskId?: string } | undefined;
   TaskDetail: { taskId: string };
+  Progress: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -35,6 +37,7 @@ export default function App() {
           options={{ presentation: 'modal' }}
         />
         <Stack.Screen name='TaskDetail' component={TaskDetailScreen} />
+        <Stack.Screen name='Progress' component={ProgressScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
