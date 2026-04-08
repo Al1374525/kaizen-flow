@@ -110,7 +110,7 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = API_URL + endpoint;
-    
+
     const headers: any = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -173,26 +173,53 @@ class ApiService {
   }
 
   // Auth endpoints
-  async login(email: string, password: string): Promise<ApiResponse<{ user: User; accessToken: string; refreshToken: string }>> {
-    const response = await this.request<{ user: User; accessToken: string; refreshToken: string }>('/auth/login', {
+  async login(
+    email: string,
+    password: string
+  ): Promise<
+    ApiResponse<{ user: User; accessToken: string; refreshToken: string }>
+  > {
+    const response = await this.request<{
+      user: User;
+      accessToken: string;
+      refreshToken: string;
+    }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
 
     if (response.success && response.data) {
-      await this.saveTokens(response.data.accessToken, response.data.refreshToken, response.data.user);
+      await this.saveTokens(
+        response.data.accessToken,
+        response.data.refreshToken,
+        response.data.user
+      );
     }
     return response;
   }
 
-  async register(email: string, password: string, firstName: string): Promise<ApiResponse<{ user: User; accessToken: string; refreshToken: string }>> {
-    const response = await this.request<{ user: User; accessToken: string; refreshToken: string }>('/auth/register', {
+  async register(
+    email: string,
+    password: string,
+    firstName: string
+  ): Promise<
+    ApiResponse<{ user: User; accessToken: string; refreshToken: string }>
+  > {
+    const response = await this.request<{
+      user: User;
+      accessToken: string;
+      refreshToken: string;
+    }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ email, password, firstName }),
     });
 
     if (response.success && response.data) {
-      await this.saveTokens(response.data.accessToken, response.data.refreshToken, response.data.user);
+      await this.saveTokens(
+        response.data.accessToken,
+        response.data.refreshToken,
+        response.data.user
+      );
     }
     return response;
   }
@@ -207,8 +234,14 @@ class ApiService {
   }
 
   async getTaskById(id: string): Promise<ApiResponse<Task>> {
-    const response = await this.request<Task[]>('/tasks/' + id, { method: 'GET' });
-    return { success: response.success, data: response.data?.[0], error: response.error };
+    const response = await this.request<Task[]>('/tasks/' + id, {
+      method: 'GET',
+    });
+    return {
+      success: response.success,
+      data: response.data?.[0],
+      error: response.error,
+    };
   }
 
   async createTask(task: {
@@ -224,7 +257,10 @@ class ApiService {
     });
   }
 
-  async updateTask(id: string, updates: Partial<Task>): Promise<ApiResponse<Task>> {
+  async updateTask(
+    id: string,
+    updates: Partial<Task>
+  ): Promise<ApiResponse<Task>> {
     return this.request<Task>('/tasks/' + id, {
       method: 'PUT',
       body: JSON.stringify(updates),
