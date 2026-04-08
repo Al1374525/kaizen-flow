@@ -1,15 +1,23 @@
-import React from 'react';
+/**
+ * Home Screen
+ * Dashboard with today's tasks and progress
+ */
+
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { apiService, Task } from '../services/api';
 
-type TaskStatus = 'in_progress' | 'completed' | 'not_started';
+type TaskStatus = 'active' | 'completed' | 'paused';
 type TaskCategory =
   | 'Work'
   | 'Health'
@@ -18,41 +26,7 @@ type TaskCategory =
   | 'Social'
   | 'Other';
 
-interface Task {
-  id: string;
-  title: string;
-  status: TaskStatus;
-  difficulty: number;
-  category: TaskCategory;
-}
-
-const mockTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Review security logs',
-    status: 'in_progress',
-    difficulty: 3,
-    category: 'Work',
-  },
-  {
-    id: '2',
-    title: 'Call mom',
-    status: 'completed',
-    difficulty: 1,
-    category: 'Social',
-  },
-  {
-    id: '3',
-    title: 'Study for Security+',
-    status: 'not_started',
-    difficulty: 5,
-    category: 'Learning',
-  },
-];
-
-const user = { firstName: 'Albert' };
-
-const categoryColors: Record<TaskCategory, string> = {
+const CATEGORY_COLORS: Record<TaskCategory, string> = {
   Work: '#64B5F6',
   Health: '#81C784',
   Learning: '#BA68C8',
@@ -61,33 +35,121 @@ const categoryColors: Record<TaskCategory, string> = {
   Other: '#90A4AE',
 };
 
-const statusColors: Record<TaskStatus, string> = {
-  in_progress: '#FFB74D',
+const STATUS_COLORS: Record<TaskStatus, string> = {
+  active: '#FFB74D',
   completed: '#4CAF50',
-  not_started: '#E57373',
+  paused: '#E57373',
+};
+
+const DIFFICULTY_LABELS: Record<number, string> = {
+  1: 'Easy',
+  2: 'Light effort',
+  3: 'Some effort',
+  4: 'Challenging',
+  5: 'Stretch',
 };
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [userName, setUserName] = useState<string>('User');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const completedTasks = mockTasks.filter(task => task.status === 'completed');
-  const progressPercentage = Math.round(
-    (completedTasks.length / mockTasks.length) * 100
-  );
-  const focusTask =
-    mockTasks.find(task => task.status !== 'completed') ?? mockTasks[0];
+  // Fetch tasks
+  const fetchTasks = async (showRefreshing = false) => {
+    try {
+      if (showRefreshing) setIsRefreshing(true);
+      else setIsLoading(true);
+      setError(null);
 
-  const handleSettingsPress = () => {
-    // Placeholder for settings navigation once the screen exists
+      // Get user info
+      const user = await apiService.getStoredUser();
+      if (user?.firstName) {
+        setUserName(user.firstName);
+      }
+
+      // Fetch tasks
+      const response = await apiService.getTasks();
+
+      if (response.success && response.data) {
+        setTasks(response.data);
+      } else {
+        setError(response.error || 'Failed to load tasks');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
   };
 
-  const handleMarkComplete = () => {
-    // Placeholder for API integration / optimistic updates
+  // Fetch on screen focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchTasks();
+    }, [])
+  );
+
+  // Get greeting based on time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  // Derived data
+  const completedTasks = tasks.filter(task => task.status === 'completed');
+  const activeTasks = tasks.filter(task => task.status === 'active');
+  const progressPercentage =
+    tasks.length > 0
+      ? Math.round((completedTasks.length / tasks.length) * 100)
+      : 0;
+  const focusTask = activeTasks[0] || null;
+
+  // Handlers
+  const handleSettingsPress = () => {
+    // Future: navigate to settings
+  };
+
+  const handleMarkComplete = async (taskId: string) => {
+    try {
+      // Optimistic update
+      setTasks(prev =>
+        prev.map(t => (t.id === taskId ? { ...t, status: 'completed' } : t))
+      );
+
+      const response = await apiService.markTaskComplete(taskId);
+      if (!response.success) {
+        // Revert on failure
+        fetchTasks();
+      }
+    } catch (err) {
+      fetchTasks();
+    }
   };
 
   const handleCreateTask = () => {
     navigation.navigate('CreateTask');
   };
+
+  const handleTaskPress = (taskId: string) => {
+    navigation.navigate('TaskDetail', { taskId });
+  };
+
+  if (isLoading && !isRefreshing) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size='large' color='#FF8C42' />
+          <Text style={styles.loadingText}>Loading tasks...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -95,11 +157,19 @@ export default function HomeScreen() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={() => fetchTasks(true)}
+              tintColor='#FF8C42'
+            />
+          }
         >
+          {/* Header */}
           <View style={styles.header}>
             <View>
               <Text style={styles.greeting}>
-                Good morning, {user.firstName}! 👋
+                {getGreeting()}, {userName}! 👋
               </Text>
               <Text style={styles.subGreeting}>
                 Let&apos;s make today count.
@@ -114,35 +184,52 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.sectionLabel}>Today&apos;s Focus</Text>
-            <Text style={styles.focusTitle}>{focusTask.title}</Text>
-
-            <View style={styles.focusMetaRow}>
-              <View style={styles.metaChip}>
-                <Text style={styles.metaText}>💪 {focusTask.difficulty}/5</Text>
-              </View>
-              <View
-                style={[
-                  styles.categoryChip,
-                  { backgroundColor: categoryColors[focusTask.category] },
-                ]}
-              >
-                <Text style={styles.categoryChipText}>
-                  📁 {focusTask.category}
-                </Text>
-              </View>
+          {/* Error message */}
+          {error && (
+            <View style={styles.errorBanner}>
+              <Text style={styles.errorText}>{error}</Text>
             </View>
+          )}
 
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={handleMarkComplete}
-              style={styles.primaryButton}
-            >
-              <Text style={styles.primaryButtonText}>Mark Complete</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Today's Focus Card */}
+          {focusTask && (
+            <View style={styles.card}>
+              <Text style={styles.sectionLabel}>Today&apos;s Focus</Text>
+              <Text style={styles.focusTitle}>{focusTask.title}</Text>
 
+              <View style={styles.focusMetaRow}>
+                <View style={styles.metaChip}>
+                  <Text style={styles.metaText}>
+                    💪 {focusTask.emotionalDifficulty}/5
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.categoryChip,
+                    {
+                      backgroundColor:
+                        CATEGORY_COLORS[focusTask.category as TaskCategory] ||
+                        '#90A4AE',
+                    },
+                  ]}
+                >
+                  <Text style={styles.categoryChipText}>
+                    {focusTask.category || 'Other'}
+                  </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => handleMarkComplete(focusTask.id)}
+                style={styles.primaryButton}
+              >
+                <Text style={styles.primaryButtonText}>Mark Complete</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Progress Card */}
           <View style={styles.card}>
             <View style={styles.progressHeader}>
               <Text style={styles.sectionLabel}>Your Progress</Text>
@@ -161,22 +248,28 @@ export default function HomeScreen() {
             </View>
 
             <Text style={styles.progressText}>
-              {completedTasks.length} of {mockTasks.length} tasks today
+              {completedTasks.length} of {tasks.length} tasks today
             </Text>
           </View>
 
+          {/* Tasks List */}
           <View style={styles.tasksSection}>
             <Text style={styles.tasksHeading}>
-              Today's Tasks ({mockTasks.length})
+              Today&apos;s Tasks ({tasks.length})
             </Text>
 
-            {mockTasks.map(task => (
-              <View key={task.id} style={styles.taskCard}>
+            {tasks.map(task => (
+              <TouchableOpacity
+                key={task.id}
+                style={styles.taskCard}
+                onPress={() => handleTaskPress(task.id)}
+                activeOpacity={0.8}
+              >
                 <View style={styles.taskLeftContent}>
                   <View
                     style={[
                       styles.statusDot,
-                      { backgroundColor: statusColors[task.status] },
+                      { backgroundColor: STATUS_COLORS[task.status] },
                     ]}
                   />
 
@@ -186,21 +279,34 @@ export default function HomeScreen() {
                       <View
                         style={[
                           styles.taskCategoryBadge,
-                          { backgroundColor: categoryColors[task.category] },
+                          {
+                            backgroundColor:
+                              CATEGORY_COLORS[task.category as TaskCategory] ||
+                              '#90A4AE',
+                          },
                         ]}
                       >
                         <Text style={styles.taskCategoryText}>
-                          {task.category}
+                          {task.category || 'Other'}
                         </Text>
                       </View>
                       <Text style={styles.taskDifficulty}>
-                        💪 {task.difficulty}/5
+                        💪 {task.emotionalDifficulty}/5
                       </Text>
                     </View>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
+
+            {tasks.length === 0 && (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>No tasks yet!</Text>
+                <Text style={styles.emptySubtext}>
+                  Tap the + button to create your first task
+                </Text>
+              </View>
+            )}
           </View>
 
           <TouchableOpacity style={styles.viewAllLink}>
@@ -208,6 +314,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </ScrollView>
 
+        {/* FAB */}
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={handleCreateTask}
@@ -228,6 +335,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF8F0',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#8B7355',
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -267,6 +384,17 @@ const styles = StyleSheet.create({
   },
   settingsIcon: {
     fontSize: 20,
+  },
+  errorBanner: {
+    backgroundColor: '#FFEBEE',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#C62828',
+    fontSize: 14,
+    textAlign: 'center',
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -420,6 +548,30 @@ const styles = StyleSheet.create({
     color: '#8B7355',
     fontWeight: '600',
   },
+  emptyState: {
+    alignItems: 'center',
+    padding: 32,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#3D2914',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#8B7355',
+    textAlign: 'center',
+  },
+  viewAllLink: {
+    alignSelf: 'center',
+    paddingVertical: 16,
+  },
+  viewAllText: {
+    color: '#FF8C42',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   fab: {
     position: 'absolute',
     right: 24,
@@ -440,14 +592,5 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: '#FFFFFF',
     lineHeight: 30,
-  },
-  viewAllLink: {
-    alignSelf: 'center',
-    paddingVertical: 16,
-  },
-  viewAllText: {
-    color: '#FF8C42',
-    fontSize: 14,
-    fontWeight: '600',
   },
 });
