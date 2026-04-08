@@ -3,7 +3,7 @@
  * Dashboard with today's tasks and progress
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -39,14 +39,6 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
   active: '#FFB74D',
   completed: '#4CAF50',
   paused: '#E57373',
-};
-
-const DIFFICULTY_LABELS: Record<number, string> = {
-  1: 'Easy',
-  2: 'Light effort',
-  3: 'Some effort',
-  4: 'Challenging',
-  5: 'Stretch',
 };
 
 export default function HomeScreen() {
