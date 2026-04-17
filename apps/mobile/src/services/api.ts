@@ -5,7 +5,7 @@
 
 import * as SecureStore from 'expo-secure-store';
 
-const API_URL = 'http://10.0.2.2:3000';
+const API_URL = 'http://76.13.115.97:3000';
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'accessToken';
