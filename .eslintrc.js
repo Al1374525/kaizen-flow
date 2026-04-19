@@ -2,15 +2,14 @@ module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: './tsconfig.json',
     ecmaVersion: 2022,
-    sourceType: 'module'
+    sourceType: 'module',
   },
   plugins: ['@typescript-eslint', 'prettier'],
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
-    'prettier'
+    'prettier',
   ],
   rules: {
     'prettier/prettier': 'error',
@@ -28,7 +27,7 @@ module.exports = {
   env: {
     node: true,
     es2022: true,
-    jest: true
+    jest: true,
   },
   ignorePatterns: [
     'dist/',
@@ -37,6 +36,7 @@ module.exports = {
     '.expo/',
     'android/',
     'ios/',
-    '*.config.js'
-  ]
+    '*.config.js',
+    '**/.eslintrc.js',
+  ],
 };

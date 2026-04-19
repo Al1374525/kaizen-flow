@@ -13,11 +13,19 @@ import dotenv from 'dotenv';
 import { errorHandler } from './middleware/errorHandler';
 import { validateEnv } from './config/env';
 import { initializeDatabase } from './config/database';
+import {
+  generalLimiter,
+  authLimiter,
+  aiLimiter,
+} from './middleware/rateLimiter';
 
 // Import routes
 import authRoutes from './routes/auth';
 import taskRoutes from './routes/tasks';
 import healthRoutes from './routes/health';
+import xpRoutes from './routes/xp';
+import microCommitmentRoutes from './routes/microCommitments';
+import aiRoutes from './routes/ai';
 
 // Load environment variables
 dotenv.config();
@@ -40,10 +48,16 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Global rate limiter
+app.use(generalLimiter);
+
 // Routes
 app.use('/health', healthRoutes);
-app.use('/auth', authRoutes);
+app.use('/auth', authLimiter, authRoutes);
 app.use('/tasks', taskRoutes);
+app.use('/xp', xpRoutes);
+app.use('/', microCommitmentRoutes);
+app.use('/ai', aiLimiter, aiRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
