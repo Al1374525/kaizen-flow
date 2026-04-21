@@ -234,14 +234,9 @@ class ApiService {
   }
 
   async getTaskById(id: string): Promise<ApiResponse<Task>> {
-    const response = await this.request<Task[]>('/tasks/' + id, {
+    return this.request<Task>('/tasks/' + id, {
       method: 'GET',
     });
-    return {
-      success: response.success,
-      data: response.data?.[0],
-      error: response.error,
-    };
   }
 
   async createTask(task: {
@@ -251,9 +246,14 @@ class ApiService {
     emotionalDifficulty?: number;
     parentTaskId?: string;
   }): Promise<ApiResponse<Task>> {
+    const { parentTaskId, ...rest } = task;
+    const body: Record<string, unknown> = { ...rest };
+    if (parentTaskId !== undefined) {
+      body.parent_task_id = parentTaskId;
+    }
     return this.request<Task>('/tasks', {
       method: 'POST',
-      body: JSON.stringify(task),
+      body: JSON.stringify(body),
     });
   }
 

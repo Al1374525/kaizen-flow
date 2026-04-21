@@ -3,7 +3,7 @@
  * View and manage individual task
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,9 +15,15 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import {
+  useNavigation,
+  useRoute,
+  useFocusEffect,
+  RouteProp,
+} from '@react-navigation/native';
+import { apiService, Task } from '../services/api';
 
-type TaskStatus = 'in_progress' | 'completed' | 'not_started';
+type TaskStatus = 'active' | 'completed' | 'paused';
 type TaskCategory =
   | 'Work'
   | 'Health'
@@ -40,15 +46,15 @@ const CATEGORY_COLORS: Record<TaskCategory, string> = {
 };
 
 const STATUS_COLORS: Record<TaskStatus, string> = {
-  in_progress: '#FFB74D',
+  active: '#FFB74D',
   completed: '#4CAF50',
-  not_started: '#E57373',
+  paused: '#E57373',
 };
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
-  in_progress: 'In Progress',
+  active: 'Active',
   completed: 'Completed',
-  not_started: 'Not Started',
+  paused: 'Paused',
 };
 
 const DIFFICULTY_LABELS: Record<number, string> = {
@@ -59,61 +65,124 @@ const DIFFICULTY_LABELS: Record<number, string> = {
   5: 'Stretch',
 };
 
-// Mock task data - in real app, fetch from API
-const mockTask: {
-  id: string;
-  title: string;
-  description: string;
-  status: TaskStatus;
-  difficulty: number;
-  category: TaskCategory;
-  createdAt: string;
-  completedAt: string | null;
-} = {
-  id: '1',
-  title: 'Review security logs',
-  description:
-    'Check the latest security logs for any suspicious activity. Look for failed login attempts, unusual access patterns, and potential security threats.',
-  status: 'in_progress' as TaskStatus,
-  difficulty: 3,
-  category: 'Work' as TaskCategory,
-  createdAt: 'Mar 22, 2026',
-  completedAt: '',
+const CATEGORY_ICONS: Record<TaskCategory, string> = {
+  Work: '📁',
+  Health: '💪',
+  Learning: '📚',
+  Creative: '🎨',
+  Social: '👥',
+  Other: '📌',
+};
+
+const formatDate = (iso: string): string => {
+  try {
+    const date = new Date(iso);
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  } catch {
+    return iso;
+  }
 };
 
 export default function TaskDetailScreen() {
   const navigation = useNavigation<any>();
-  void useRoute<RouteProp<RootStackParamList, 'TaskDetail'>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'TaskDetail'>>();
+  const { taskId } = route.params;
 
-  const [task, setTask] = useState(mockTask);
-  const [isLoading, setIsLoading] = useState(false);
+  const [task, setTask] = useState<Task | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMutating, setIsMutating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState(task.title);
-  const [editDescription, setEditDescription] = useState(task.description);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
 
-  const handleMarkComplete = () => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setTask(prev => ({
-        ...prev,
-        status: prev.status === 'completed' ? 'in_progress' : 'completed',
-        completedAt: prev.status === 'completed' ? null : 'Apr 5, 2026',
-      }));
+  const fetchTask = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await apiService.getTaskById(taskId);
+
+      if (response.success && response.data) {
+        setTask(response.data);
+        setEditTitle(response.data.title);
+        setEditDescription(response.data.description ?? '');
+      } else {
+        setError(response.error || 'Failed to load task');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
-  const handleEdit = () => {
-    if (isEditing) {
-      // Save changes
-      setTask(prev => ({
-        ...prev,
-        title: editTitle,
-        description: editDescription,
-      }));
+  useFocusEffect(
+    useCallback(() => {
+      fetchTask();
+    }, [taskId])
+  );
+
+  const handleMarkComplete = async () => {
+    if (!task) return;
+    try {
+      setIsMutating(true);
+      const nextStatus: TaskStatus =
+        task.status === 'completed' ? 'active' : 'completed';
+      const response = await apiService.updateTask(taskId, {
+        status: nextStatus,
+      });
+
+      if (response.success && response.data) {
+        setTask(response.data);
+      } else {
+        Alert.alert('Error', response.error ?? 'Failed to update task');
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Network error. Please try again.');
+    } finally {
+      setIsMutating(false);
     }
-    setIsEditing(!isEditing);
+  };
+
+  const handleEdit = async () => {
+    if (!task) return;
+
+    if (!isEditing) {
+      setEditTitle(task.title);
+      setEditDescription(task.description ?? '');
+      setIsEditing(true);
+      return;
+    }
+
+    const trimmedTitle = editTitle.trim();
+    if (!trimmedTitle) {
+      Alert.alert('Error', 'Task title is required');
+      return;
+    }
+
+    try {
+      setIsMutating(true);
+      const response = await apiService.updateTask(taskId, {
+        title: trimmedTitle,
+        description: editDescription.trim() || null,
+      });
+
+      if (response.success && response.data) {
+        setTask(response.data);
+        setIsEditing(false);
+      } else {
+        Alert.alert('Error', response.error ?? 'Failed to update task');
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Network error. Please try again.');
+    } finally {
+      setIsMutating(false);
+    }
   };
 
   const handleDelete = () => {
@@ -122,25 +191,56 @@ export default function TaskDetailScreen() {
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: () => {
-          // Simulate API call
-          navigation.goBack();
+        onPress: async () => {
+          try {
+            setIsMutating(true);
+            const response = await apiService.deleteTask(taskId);
+            if (response.success) {
+              navigation.goBack();
+            } else {
+              Alert.alert('Error', response.error ?? 'Failed to delete task');
+            }
+          } catch (err) {
+            Alert.alert('Error', 'Network error. Please try again.');
+          } finally {
+            setIsMutating(false);
+          }
         },
       },
     ]);
   };
 
-  const categoryIcon = (cat: TaskCategory) => {
-    const icons: Record<TaskCategory, string> = {
-      Work: '📁',
-      Health: '💪',
-      Learning: '📚',
-      Creative: '🎨',
-      Social: '👥',
-      Other: '📌',
-    };
-    return icons[cat];
-  };
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size='large' color='#FF8C42' />
+          <Text style={styles.loadingText}>Loading task...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !task) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorTitle}>{error ?? 'Task not found'}</Text>
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.primaryButtonText}>← Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const category = (task.category as TaskCategory) || 'Other';
+  const status = task.status as TaskStatus;
+  const completedAtDisplay =
+    status === 'completed' ? formatDate(task.updatedAt) : null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -156,7 +256,7 @@ export default function TaskDetailScreen() {
           <TouchableOpacity
             onPress={handleEdit}
             style={styles.menuButton}
-            disabled={isLoading}
+            disabled={isMutating}
           >
             <Text style={styles.menuButtonText}>{isEditing ? '💾' : '✏️'}</Text>
           </TouchableOpacity>
@@ -175,6 +275,7 @@ export default function TaskDetailScreen() {
             onChangeText={setEditTitle}
             placeholder='Task title'
             placeholderTextColor='#B8A089'
+            editable={!isMutating}
           />
         ) : (
           <Text style={styles.title}>{task.title}</Text>
@@ -185,22 +286,21 @@ export default function TaskDetailScreen() {
           <View
             style={[
               styles.categoryBadge,
-              { backgroundColor: CATEGORY_COLORS[task.category] },
+              { backgroundColor: CATEGORY_COLORS[category] || '#90A4AE' },
             ]}
           >
             <Text style={styles.categoryBadgeText}>
-              {categoryIcon(task.category)} {task.category}
+              {CATEGORY_ICONS[category] || '📌'} {category}
             </Text>
           </View>
           <View
             style={[
               styles.statusBadge,
-              { backgroundColor: STATUS_COLORS[task.status] },
+              { backgroundColor: STATUS_COLORS[status] || '#90A4AE' },
             ]}
           >
             <Text style={styles.statusBadgeText}>
-              {task.status === 'completed' ? '✅' : '⏳'}{' '}
-              {STATUS_LABELS[task.status]}
+              {status === 'completed' ? '✅' : '⏳'} {STATUS_LABELS[status]}
             </Text>
           </View>
         </View>
@@ -217,6 +317,7 @@ export default function TaskDetailScreen() {
               multiline
               numberOfLines={4}
               textAlignVertical='top'
+              editable={!isMutating}
             />
           ) : (
             <>
@@ -232,12 +333,12 @@ export default function TaskDetailScreen() {
         <View style={styles.datesRow}>
           <View style={styles.dateItem}>
             <Text style={styles.dateLabel}>Created</Text>
-            <Text style={styles.dateValue}>{task.createdAt}</Text>
+            <Text style={styles.dateValue}>{formatDate(task.createdAt)}</Text>
           </View>
-          {task.completedAt && (
+          {completedAtDisplay && (
             <View style={styles.dateItem}>
               <Text style={styles.dateLabel}>Completed</Text>
-              <Text style={styles.dateValue}>{task.completedAt}</Text>
+              <Text style={styles.dateValue}>{completedAtDisplay}</Text>
             </View>
           )}
         </View>
@@ -245,8 +346,8 @@ export default function TaskDetailScreen() {
         {/* Difficulty */}
         <View style={styles.difficultyContainer}>
           <Text style={styles.difficultyLabel}>
-            💪 Difficulty: {task.difficulty}/5 '
-            {DIFFICULTY_LABELS[task.difficulty]}'
+            💪 Difficulty: {task.emotionalDifficulty}/5 &apos;
+            {DIFFICULTY_LABELS[task.emotionalDifficulty] || ''}&apos;
           </Text>
         </View>
 
@@ -254,18 +355,16 @@ export default function TaskDetailScreen() {
         <TouchableOpacity
           style={[
             styles.primaryButton,
-            isLoading && styles.primaryButtonDisabled,
+            isMutating && styles.primaryButtonDisabled,
           ]}
           onPress={handleMarkComplete}
-          disabled={isLoading}
+          disabled={isMutating}
         >
-          {isLoading ? (
+          {isMutating ? (
             <ActivityIndicator color='#FFFFFF' />
           ) : (
             <Text style={styles.primaryButtonText}>
-              {task.status === 'completed'
-                ? '↩️ Undo Complete'
-                : '✅ Mark Complete'}
+              {status === 'completed' ? '↩️ Undo Complete' : '✅ Mark Complete'}
             </Text>
           )}
         </TouchableOpacity>
@@ -275,7 +374,7 @@ export default function TaskDetailScreen() {
           <TouchableOpacity
             style={styles.secondaryButton}
             onPress={handleEdit}
-            disabled={isLoading}
+            disabled={isMutating}
           >
             <Text style={styles.secondaryButtonText}>
               {isEditing ? '💾 Save' : '✏️ Edit'}
@@ -284,7 +383,7 @@ export default function TaskDetailScreen() {
           <TouchableOpacity
             style={[styles.secondaryButton, styles.deleteButton]}
             onPress={handleDelete}
-            disabled={isLoading}
+            disabled={isMutating}
           >
             <Text style={styles.deleteButtonText}>🗑️ Delete</Text>
           </TouchableOpacity>
@@ -298,6 +397,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF8F0',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#8B7355',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#C62828',
+    marginBottom: 24,
+    textAlign: 'center',
   },
   header: {
     flexDirection: 'row',

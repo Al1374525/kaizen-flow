@@ -18,7 +18,8 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { apiService } from '../services/api';
 
 type TaskCategory =
   | 'Work'
@@ -27,6 +28,10 @@ type TaskCategory =
   | 'Creative'
   | 'Social'
   | 'Other';
+
+type CreateTaskRouteParams = {
+  CreateTask: { parentTaskId?: string } | undefined;
+};
 
 const CATEGORIES: TaskCategory[] = [
   'Work',
@@ -54,25 +59,16 @@ const DIFFICULTY_LABELS: Record<number, string> = {
   5: 'Stretch',
 };
 
-interface ParentTask {
-  id: string;
-  title: string;
-}
-
-const mockParentTasks: ParentTask[] = [
-  { id: '1', title: 'Study for Security+ exam' },
-  { id: '2', title: 'Complete Kaizen Flow project' },
-];
-
 export default function CreateTaskScreen() {
   const navigation = useNavigation<any>();
+  const route = useRoute<RouteProp<CreateTaskRouteParams, 'CreateTask'>>();
+  const routeParentTaskId = route.params?.parentTaskId;
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<TaskCategory>('Work');
   const [difficulty, setDifficulty] = useState(1);
   const [isSubtask, setIsSubtask] = useState(false);
-  const [parentTaskId, setParentTaskId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ title?: string }>({});
 
@@ -93,17 +89,22 @@ export default function CreateTaskScreen() {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const trimmedDescription = description.trim();
+      const response = await apiService.createTask({
+        title: title.trim(),
+        ...(trimmedDescription ? { description: trimmedDescription } : {}),
+        category,
+        emotionalDifficulty: difficulty,
+        ...(isSubtask && routeParentTaskId
+          ? { parentTaskId: routeParentTaskId }
+          : {}),
+      });
 
-      Alert.alert('Success', 'Task created successfully!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to create task. Please try again.');
+      if (response.success) {
+        navigation.goBack();
+      } else {
+        Alert.alert('Error', response.error ?? 'Failed to create task');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -264,35 +265,11 @@ export default function CreateTaskScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Parent Task Dropdown */}
-            {isSubtask && (
+            {isSubtask && !routeParentTaskId && (
               <View style={styles.parentTaskContainer}>
-                <Text style={styles.label}>Parent Task</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {mockParentTasks.map(task => (
-                    <TouchableOpacity
-                      key={task.id}
-                      style={[
-                        styles.parentTaskChip,
-                        parentTaskId === task.id &&
-                          styles.parentTaskChipSelected,
-                      ]}
-                      onPress={() => setParentTaskId(task.id)}
-                      disabled={isLoading}
-                    >
-                      <Text
-                        style={[
-                          styles.parentTaskChipText,
-                          parentTaskId === task.id &&
-                            styles.parentTaskChipTextSelected,
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {task.title}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                <Text style={styles.helperText}>
+                  Open a task first to add a subtask
+                </Text>
               </View>
             )}
           </View>
@@ -303,10 +280,11 @@ export default function CreateTaskScreen() {
           <TouchableOpacity
             style={[
               styles.createButton,
-              isLoading && styles.createButtonDisabled,
+              (isLoading || (isSubtask && !routeParentTaskId)) &&
+                styles.createButtonDisabled,
             ]}
             onPress={handleCreateTask}
-            disabled={isLoading}
+            disabled={isLoading || (isSubtask && !routeParentTaskId)}
           >
             {isLoading ? (
               <ActivityIndicator color='#FFFFFF' />
@@ -481,25 +459,10 @@ const styles = StyleSheet.create({
   parentTaskContainer: {
     marginTop: 16,
   },
-  parentTaskChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E8D5C4',
-  },
-  parentTaskChipSelected: {
-    backgroundColor: '#FF8C42',
-    borderColor: '#FF8C42',
-  },
-  parentTaskChipText: {
-    fontSize: 14,
-    color: '#3D2914',
-  },
-  parentTaskChipTextSelected: {
-    color: '#FFFFFF',
+  helperText: {
+    fontSize: 13,
+    color: '#8B7355',
+    fontStyle: 'italic',
   },
   buttonContainer: {
     padding: 16,
