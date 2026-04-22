@@ -13,9 +13,9 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@react-navigation/native": "^7.0.0",
-    "@react-navigation/native-stack": "^7.0.0",
-    "expo": "^54.0.0",
+    "@react-navigation/native": "^7.1.6",
+    "@react-navigation/native-stack": "^7.3.10",
+    "expo": "~54.0.0",
     "expo-secure-store": "~15.0.8",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
@@ -25,8 +25,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-    "@types/react": "~18.3.12",
-    "typescript": "^5.3.3"
+    "@types/react": "~19.1.0",
+    "typescript": "^5.9.2"
   },
   "private": true
 }
